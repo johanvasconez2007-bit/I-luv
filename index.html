@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Para Ti, Mi Amor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg-void: #070305;
+      --bg-wine: #1a060d;
+      --accent-crimson: #9f1239;
+      --accent-rose: #e11d48;
+      --soft-blush: #fecdd3;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100dvh;
+      background-color: var(--bg-void);
+      color: #fff1f2;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+    body {
+      background:
+        radial-gradient(circle at 18% 15%, rgba(159, 18, 57, 0.28), transparent 46%),
+        radial-gradient(circle at 82% 85%, rgba(136, 19, 55, 0.24), transparent 50%),
+        linear-gradient(165deg, #070305 0%, #14040a 52%, #090306 100%);
+    }
+    .font-serif-title {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    .font-serif-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    #hearts-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #app {
+      position: relative;
+      z-index: 10;
+      min-height: 100dvh;
+    }
+    .velvet-card {
+      background: linear-gradient(155deg, rgba(24, 6, 13, 0.92), rgba(10, 3, 6, 0.96));
+      border: 1px solid rgba(251, 113, 133, 0.24);
+      box-shadow:
+        0 25px 65px -15px rgba(0, 0, 0, 0.88),
+        0 0 42px -12px rgba(225, 29, 72, 0.24),
+        inset 0 1px 0 rgba(255, 228, 230, 0.08);
+      backdrop-filter: blur(14px);
+    }
+    .screen-view {
+      display: none;
+      animation: viewFadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .screen-view.is-active {
+      display: block;
+    }
+    @keyframes viewFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #9f1239 0%, #be123c 55%, #e11d48 100%);
+      border: 1px solid rgba(254, 205, 211, 0.3);
+      box-shadow: 0 10px 26px -6px rgba(225, 29, 72, 0.5);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 32px -6px rgba(225, 29, 72, 0.65);
+    }
+    .btn-primary:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+    .choice-option {
+      background: rgba(34, 8, 17, 0.72);
+      border: 1px solid rgba(251, 113, 133, 0.2);
+      transition: all 0.2s ease;
+    }
+    .choice-option:hover {
+      background: rgba(88, 16, 37, 0.65);
+      border-color: rgba(251, 113, 133, 0.48);
+    }
+    .choice-option.is-selected {
+      background: linear-gradient(135deg, rgba(159, 18, 57, 0.78), rgba(136, 19, 55, 0.9));
+      border-color: rgba(254, 205, 211, 0.65);
+      box-shadow: 0 6px 20px -6px rgba(225, 29, 72, 0.45);
+    }
+    .ornament-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(251, 113, 133, 0.45), transparent);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="hearts-canvas" aria-hidden="true"></canvas>
+
+  <div id="app" class="w-full flex flex-col items-center justify-between px-4 py-5 sm:py-8">
+    <header class="w-full max-w-md flex items-center justify-between gap-4 mb-4">
+      <div id="progress-bars" class="flex items-center gap-1.5 flex-1" aria-label="Progreso">
+        <span class="h-1 flex-1 rounded-full bg-rose-400 transition-all duration-300"></span>
+        <span class="h-1 flex-1 rounded-full bg-rose-950 transition-all duration-300"></span>
+        <span class="h-1 flex-1 rounded-full bg-rose-950 transition-all duration-300"></span>
+        <span class="h-1 flex-1 rounded-full bg-rose-950 transition-all duration-300"></span>
+        <span class="h-1 flex-1 rounded-full bg-rose-950 transition-all duration-300"></span>
+      </div>
+      <button
+        id="open-qr-btn"
+        type="button"
+        class="px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-rose-100 bg-rose-950/70 hover:bg-rose-900/70 border border-rose-400/30 transition"
+      >
+        QR
+      </button>
+    </header>
+
+    <main class="w-full max-w-md my-auto">
+      <section id="view-0" class="screen-view is-active velvet-card rounded-3xl p-6 sm:p-8 text-center">
+        <p class="text-[11px] uppercase tracking-[0.28em] text-rose-300/80 mb-3">
+          Un pequeño espacio para ti
+        </p>
+        <h1 class="font-serif-title text-4xl sm:text-5xl font-bold text-rose-50 tracking-tight mb-4">
+          Hola, mi amor
+        </h1>
+        <div class="ornament-line my-5"></div>
+        <p class="font-serif-editorial italic text-xl sm:text-2xl text-rose-100/95 leading-relaxed mb-3">
+          Te amo.
+        </p>
+        <p class="text-sm sm:text-base text-rose-200/80 leading-relaxed mb-7">
+          Preparé unas preguntas breves para acompañarte hoy. Tómate tu tiempo y responde con calma.
+        </p>
+        <button
+          id="start-btn"
+          type="button"
+          class="btn-primary w-full py-3.5 px-6 rounded-2xl font-semibold text-sm sm:text-base tracking-wide text-white"
+        >
+          Comenzar
+        </button>
+      </section>
+
+      <section id="view-1" class="screen-view velvet-card rounded-3xl p-6 sm:p-8">
+        <p class="text-[11px] uppercase tracking-[0.25em] text-rose-300/75 mb-2">
+          Pregunta 1 de 3
+        </p>
+        <h2 class="font-serif-title text-2xl sm:text-3xl font-bold text-rose-50 leading-snug mb-2">
+          ¿Cómo estás hoy, mi amor?
+        </h2>
+        <p class="text-xs sm:text-sm text-rose-200/75 mb-5">
+          Te amo. ¿Cómo te encuentras en este momento?
+        </p>
+
+        <div id="q1-options" class="space-y-2.5 mb-5">
+          <button
+            type="button"
+            data-reply="Me alegra mucho saber que estás bien, mi vida. Cuidar tu paz y verte tranquila es algo que valoro profundamente cada día."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            Tranquila y en paz
+          </button>
+          <button
+            type="button"
+            data-reply="Qué bueno leer eso, mi amor. Tu alegría tiene un peso real en mi día y me da mucha satisfacción saber que estás así."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            Contenta y con buen ánimo
+          </button>
+          <button
+            type="button"
+            data-reply="Si hoy sientes cansancio, aquí estoy contigo sin prisas. No tienes que cargarlo todo sola; cuenta conmigo."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            Un poco cansada
+          </button>
+          <button
+            type="button"
+            data-reply="Gracias por decírmelo con honestidad, mi vida. Estoy a tu lado para escucharte y acompañarte en lo que necesites."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            Pensativa o reservada
+          </button>
+        </div>
+
+        <div id="q1-feedback" class="hidden mb-5 p-4 rounded-2xl bg-rose-950/55 border border-rose-400/25 text-sm text-rose-100 leading-relaxed"></div>
+
+        <div class="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            data-back="0"
+            class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium text-rose-200/80 hover:text-white bg-white/5 hover:bg-white/10 transition"
+          >
+            Anterior
+          </button>
+          <button
+            id="next-q1"
+            type="button"
+            disabled
+            class="btn-primary flex-1 py-3 px-6 rounded-2xl font-semibold text-sm sm:text-base text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="view-2" class="screen-view velvet-card rounded-3xl p-6 sm:p-8">
+        <p class="text-[11px] uppercase tracking-[0.25em] text-rose-300/75 mb-2">
+          Pregunta 2 de 3
+        </p>
+        <h2 class="font-serif-title text-2xl sm:text-3xl font-bold text-rose-50 leading-snug mb-2">
+          ¿Qué valoras más de lo que compartimos?
+        </h2>
+        <p class="text-xs sm:text-sm text-rose-200/75 mb-5">
+          Te amo. Elige lo que más resuene contigo hoy.
+        </p>
+
+        <div id="q2-options" class="space-y-2.5 mb-5">
+          <button
+            type="button"
+            data-reply="La confianza que hemos construido es firme y real. Para mí es uno de los pilares más importantes de lo que somos."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            La confianza y el respaldo mutuo
+          </button>
+          <button
+            type="button"
+            data-reply="Hablar contigo con sinceridad siempre me ordena y me acerca más a ti. Aprecio mucho cómo nos entendemos."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            La cercanía y las conversaciones
+          </button>
+          <button
+            type="button"
+            data-reply="Los detalles sencillos y el tiempo juntos sostienen lo verdadero. Cada momento contigo tiene un lugar especial."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            Los momentos compartidos con calma
+          </button>
+          <button
+            type="button"
+            data-reply="El respeto y el cariño constante hacen que este vínculo se sienta seguro. Te elijo con convicción."
+            class="choice-option w-full text-left px-4 py-3.5 rounded-2xl text-sm sm:text-base text-rose-50 font-medium"
+          >
+            El cariño y el respeto cotidiano
+          </button>
+        </div>
+
+        <div id="q2-feedback" class="hidden mb-5 p-4 rounded-2xl bg-rose-950/55 border border-rose-400/25 text-sm text-rose-100 leading-relaxed"></div>
+
+        <div class="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            data-back="1"
+            class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium text-rose-200/80 hover:text-white bg-white/5 hover:bg-white/10 transition"
+          >
+            Anterior
+          </button>
+          <button
+            id="next-q2"
+            type="button"
+            disabled
+            class="btn-primary flex-1 py-3 px-6 rounded-2xl font-semibold text-sm sm:text-base text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="view-3" class="screen-view velvet-card rounded-3xl p-6 sm:p-8">
+        <p class="text-[11px] uppercase tracking-[0.25em] text-rose-300/75 mb-2">
+          Pregunta 3 de 3
+        </p>
+        <h2 class="font-serif-title text-2xl sm:text-3xl font-bold text-rose-50 leading-snug mb-2">
+          ¿Cuánto me amas hoy?
+        </h2>
+        <p class="text-xs sm:text-sm text-rose-200/75 mb-5">
+          Te amo. Responde con libertad.
+        </p>
+
+        <div id="love-arena" class="relative min-h-[156px] rounded-2xl bg-rose-950/35 border border-rose-400/20 p-4 flex flex-col items-center justify-center gap-3 overflow-hidden mb-5">
+          <button
+            id="love-much-btn"
+            type="button"
+            class="btn-primary py-3 px-6 rounded-2xl font-semibold text-sm sm:text-base text-white transition-all duration-200 z-10"
+          >
+            Muchísimo, infinito
+          </button>
+          <button
+            id="love-little-btn"
+            type="button"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-rose-200/85 bg-white/5 hover:bg-white/10 border border-rose-400/20 transition-all duration-150"
+          >
+            Poquito
+          </button>
+        </div>
+
+        <p id="love-status" class="text-center text-xs sm:text-sm text-rose-200/80 mb-5">
+          Cuando estés lista, continúa al cierre.
+        </p>
+
+        <div class="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            data-back="2"
+            class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium text-rose-200/80 hover:text-white bg-white/5 hover:bg-white/10 transition"
+          >
+            Anterior
+          </button>
+          <button
+            id="to-final-btn"
+            type="button"
+            class="btn-primary flex-1 py-3 px-6 rounded-2xl font-semibold text-sm sm:text-base text-white"
+          >
+            Y por último
+          </button>
+        </div>
+      </section>
+
+      <section id="view-4" class="screen-view velvet-card rounded-3xl p-6 sm:p-8">
+        <p class="text-[11px] uppercase tracking-[0.28em] text-rose-300/80 text-center mb-2">
+          Para ti
+        </p>
+        <h2 class="font-serif-title text-3xl sm:text-4xl font-bold text-rose-50 text-center mb-4">
+          Felicidades, mi vida
+        </h2>
+        <div class="ornament-line mb-6"></div>
+
+        <div class="space-y-4 text-sm sm:text-base text-rose-100/90 leading-relaxed mb-6">
+          <p>
+            Te amo con serenidad y firmeza. No es un impulso pasajero ni palabras vacías; es una decisión clara que sostengo cada día con respeto, afecto verdadero y el deseo sincero de caminar a tu lado.
+          </p>
+          <p>
+            Valoro tu presencia, tu carácter y la forma en que hemos sabido construir un espacio propio. Quiero que sepas que mi compromiso contigo es real y que siempre contarás con mi respaldo honesto.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-rose-950/45 border border-rose-400/25 mb-6">
+          <p class="text-[11px] uppercase tracking-[0.22em] text-rose-300/75 mb-2">
+            Poema
+          </p>
+          <blockquote class="font-serif-editorial italic text-lg sm:text-xl text-rose-50 leading-relaxed m-0">
+            No hace falta el ruido para nombrar lo eterno,<br />
+            basta la voz serena que sabe permanecer,<br />
+            el pulso que no cede ante el rigor del tiempo<br />
+            ni olvida el rumbo claro donde quiso volver.<br /><br />
+            En tu nombre reposa lo que el alma resguarda,<br />
+            una promesa limpia, firme y sin doblez,<br />
+            como la luz exacta que el horizonte aguarda<br />
+            cuando el afecto tiene raíz y madurez.
+          </blockquote>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-rose-900/45 to-rose-950/75 border border-rose-300/35 text-center mb-6">
+          <p class="text-[11px] uppercase tracking-[0.25em] text-rose-200/80 mb-1.5">
+            Detalle especial
+          </p>
+          <p class="font-serif-title text-xl sm:text-2xl font-bold text-white">
+            Cupón para lo que desees, mi vida
+          </p>
+          <p class="text-xs sm:text-sm text-rose-200/80 mt-1.5">
+            Válido cuando tú lo decidas. Te amo.
+          </p>
+        </div>
+
+        <button
+          id="restart-btn"
+          type="button"
+          class="w-full py-3 px-5 rounded-2xl text-xs sm:text-sm font-semibold text-rose-100 bg-white/5 hover:bg-white/10 border border-rose-400/25 transition"
+        >
+          Volver al inicio
+        </button>
+      </section>
+    </main>
+
+    <footer class="w-full max-w-md text-center mt-6 text-[11px] text-rose-200/45 tracking-wide">
+      Para ti, mi amor
+    </footer>
+  </div>
+
+  <div
+    id="qr-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="qr-modal-title"
+  >
+    <div class="velvet-card w-full max-w-md rounded-3xl p-6 relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="qr-modal-title" class="font-serif-title text-2xl font-bold text-rose-50">
+          Código QR
+        </h3>
+        <button
+          id="close-qr-btn"
+          type="button"
+          class="px-3 py-1 rounded-xl text-xs font-semibold text-rose-200 bg-white/5 hover:bg-white/10 transition"
+        >
+          Cerrar
+        </button>
+      </div>
+
+      <p class="text-xs sm:text-sm text-rose-200/80 leading-relaxed mb-4">
+        Pega aquí la <strong class="text-rose-50">URL real</strong> (que empiece con <span class="text-rose-200">https://</span>) de tu página ya publicada para generar un código QR escaneable.
+      </p>
+
+      <label for="qr-url-input" class="block text-xs uppercase tracking-wider text-rose-300/80 mb-1.5">
+        Enlace publicado (URL)
+      </label>
+      <div class="flex gap-2 mb-2">
+        <input
+          id="qr-url-input"
+          type="url"
+          placeholder="https://tu-enlace.tiiny.site"
+          class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/50 border border-rose-400/30 text-sm text-white placeholder-rose-200/35 focus:outline-none focus:border-rose-300"
+        />
+        <button
+          id="generate-qr-btn"
+          type="button"
+          class="btn-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white shrink-0"
+        >
+          Generar
+        </button>
+      </div>
+      <p id="qr-error" class="hidden text-xs text-rose-300 mb-3"></p>
+
+      <div class="mt-4 flex flex-col items-center justify-center p-5 rounded-2xl bg-black/45 border border-rose-400/20 min-h-[220px]">
+        <div id="qr-box" class="bg-white p-3 rounded-xl shadow-lg"></div>
+        <p id="qr-preview-url" class="mt-3 text-[11px] text-rose-200/75 break-all text-center max-w-full"></p>
+      </div>
+
+      <div class="mt-4 flex gap-2.5">
+        <button
+          id="copy-url-btn"
+          type="button"
+          class="flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-rose-100 bg-white/5 hover:bg-white/10 border border-rose-400/25 transition"
+        >
+          Copiar enlace
+        </button>
+        <button
+          id="download-qr-btn"
+          type="button"
+          class="btn-primary flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-white"
+        >
+          Descargar QR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const totalViews = 5;
+      let currentView = 0;
+      let loveClicks = 0;
+
+      const views = Array.from({ length: totalViews }, (_, i) => document.getElementById(`view-${i}`));
+      const progressBars = Array.from(document.getElementById('progress-bars').children);
+
+      function goToView(index) {
+        if (index < 0 || index >= totalViews) return;
+        currentView = index;
+        views.forEach((v, i) => v.classList.toggle('is-active', i === index));
+        progressBars.forEach((bar, i) => {
+          bar.className = i <= index
+            ? 'h-1 flex-1 rounded-full bg-rose-400 transition-all duration-300'
+            : 'h-1 flex-1 rounded-full bg-rose-950 transition-all duration-300';
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      document.getElementById('start-btn').addEventListener('click', () => goToView(1));
+      document.getElementById('restart-btn').addEventListener('click', () => {
+        loveClicks = 0;
+        const muchBtn = document.getElementById('love-much-btn');
+        const littleBtn = document.getElementById('love-little-btn');
+        muchBtn.style.transform = '';
+        littleBtn.style.position = '';
+        littleBtn.style.left = '';
+        littleBtn.style.top = '';
+        document.getElementById('love-status').textContent = 'Cuando estés lista, continúa al cierre.';
+        goToView(0);
+      });
+
+      document.querySelectorAll('[data-back]').forEach((btn) => {
+        btn.addEventListener('click', () => goToView(Number(btn.getAttribute('data-back'))));
+      });
+
+      function setupChoiceGroup(containerId, feedbackId, nextBtnId) {
+        const container = document.getElementById(containerId);
+        const feedback = document.getElementById(feedbackId);
+        const nextBtn = document.getElementById(nextBtnId);
+        const buttons = Array.from(container.querySelectorAll('.choice-option'));
+
+        buttons.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            buttons.forEach((b) => b.classList.remove('is-selected'));
+            btn.classList.add('is-selected');
+            feedback.textContent = btn.getAttribute('data-reply');
+            feedback.classList.remove('hidden');
+            nextBtn.disabled = false;
+          });
+        });
+      }
+
+      setupChoiceGroup('q1-options', 'q1-feedback', 'next-q1');
+      setupChoiceGroup('q2-options', 'q2-feedback', 'next-q2');
+
+      document.getElementById('next-q1').addEventListener('click', () => goToView(2));
+      document.getElementById('next-q2').addEventListener('click', () => goToView(3));
+      document.getElementById('to-final-btn').addEventListener('click', () => goToView(4));
+
+      const arena = document.getElementById('love-arena');
+      const muchBtn = document.getElementById('love-much-btn');
+      const littleBtn = document.getElementById('love-little-btn');
+      const loveStatus = document.getElementById('love-status');
+
+      function moveLittleButton() {
+        loveClicks += 1;
+        const scale = Math.min(1.24, 1 + loveClicks * 0.045);
+        muchBtn.style.transform = `scale(${scale})`;
+
+        const arenaRect = arena.getBoundingClientRect();
+        const btnRect = littleBtn.getBoundingClientRect();
+        const pad = 10;
+        const maxX = Math.max(pad, arenaRect.width - btnRect.width - pad);
+        const maxY = Math.max(pad, arenaRect.height - btnRect.height - pad);
+        const nextX = pad + Math.random() * (maxX - pad);
+        const nextY = pad + Math.random() * (maxY - pad);
+
+        littleBtn.style.position = 'absolute';
+        littleBtn.style.left = `${nextX}px`;
+        littleBtn.style.top = `${nextY}px`;
+        loveStatus.textContent = 'Te amo. Puedes pasar cuando gustes.';
+      }
+
+      littleBtn.addEventListener('pointerenter', moveLittleButton);
+      littleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        moveLittleButton();
+      });
+
+      const qrModal = document.getElementById('qr-modal');
+      const qrInput = document.getElementById('qr-url-input');
+      const qrError = document.getElementById('qr-error');
+      const qrBox = document.getElementById('qr-box');
+      const qrPreviewUrl = document.getElementById('qr-preview-url');
+      let qrInstance = null;
+
+      function normalizeUrl(raw) {
+        const trimmed = (raw || '').trim();
+        if (!trimmed) return '';
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return `https://${trimmed}`;
+      }
+
+      function isValidHttpUrl(str) {
+        try {
+          const u = new URL(str);
+          return u.protocol === 'http:' || u.protocol === 'https:';
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function renderQr(rawUrl) {
+        const normalized = normalizeUrl(rawUrl);
+        if (!normalized || !isValidHttpUrl(normalized)) {
+          qrError.textContent = 'Ingresa un enlace válido que comience con https://';
+          qrError.classList.remove('hidden');
+          return;
+        }
+        qrError.classList.add('hidden');
+        qrBox.innerHTML = '';
+        qrPreviewUrl.textContent = normalized;
+
+        if (typeof QRCode !== 'undefined') {
+          qrInstance = new QRCode(qrBox, {
+            text: normalized,
+            width: 176,
+            height: 176,
+            colorDark: '#070305',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      }
+
+      document.getElementById('open-qr-btn').addEventListener('click', () => {
+        qrModal.classList.remove('hidden');
+        qrModal.classList.add('flex');
+        const current = qrInput.value.trim();
+        if (current && isValidHttpUrl(normalizeUrl(current))) {
+          renderQr(current);
+        } else if (isValidHttpUrl(window.location.href)) {
+          qrInput.value = window.location.href;
+          renderQr(window.location.href);
+        }
+      });
+
+      document.getElementById('close-qr-btn').addEventListener('click', () => {
+        qrModal.classList.add('hidden');
+        qrModal.classList.remove('flex');
+      });
+
+      qrModal.addEventListener('click', (e) => {
+        if (e.target === qrModal) {
+          qrModal.classList.add('hidden');
+          qrModal.classList.remove('flex');
+        }
+      });
+
+      document.getElementById('generate-qr-btn').addEventListener('click', () => {
+        renderQr(qrInput.value);
+      });
+
+      document.getElementById('copy-url-btn').addEventListener('click', async () => {
+        const normalized = normalizeUrl(qrInput.value);
+        if (!normalized || !isValidHttpUrl(normalized)) {
+          qrError.textContent = 'Primero escribe un enlace válido.';
+          qrError.classList.remove('hidden');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(normalized);
+          qrError.classList.add('hidden');
+        } catch (_) {
+          qrInput.select();
+        }
+      });
+
+      document.getElementById('download-qr-btn').addEventListener('click', () => {
+        const normalized = normalizeUrl(qrInput.value);
+        if (!normalized || !isValidHttpUrl(normalized)) {
+          qrError.textContent = 'Genera primero un código QR con un enlace válido.';
+          qrError.classList.remove('hidden');
+          return;
+        }
+        renderQr(normalized);
+        setTimeout(() => {
+          const canvas = qrBox.querySelector('canvas');
+          const img = qrBox.querySelector('img');
+          const outCanvas = document.createElement('canvas');
+          outCanvas.width = 240;
+          outCanvas.height = 240;
+          const ctx = outCanvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, 240, 240);
+
+          const triggerDownload = (dataUrl) => {
+            const link = document.createElement('a');
+            link.download = 'codigo-qr-para-ti.png';
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+
+          if (canvas) {
+            ctx.drawImage(canvas, 32, 32, 176, 176);
+            triggerDownload(outCanvas.toDataURL('image/png'));
+          } else if (img && img.src) {
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = () => {
+              ctx.drawImage(tempImg, 32, 32, 176, 176);
+              triggerDownload(outCanvas.toDataURL('image/png'));
+            };
+            tempImg.src = img.src;
+          }
+        }, 80);
+      });
+
+      const canvas = document.getElementById('hearts-canvas');
+      const ctx = canvas.getContext('2d');
+      let width = 0;
+      let height = 0;
+      let hearts = [];
+
+      function resizeCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+
+      function createHearts() {
+        const count = Math.min(22, Math.max(10, Math.floor(width / 55)));
+        hearts = Array.from({ length: count }, () => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: 7 + Math.random() * 9,
+          speedY: 0.25 + Math.random() * 0.45,
+          drift: (Math.random() - 0.5) * 0.35,
+          phase: Math.random() * Math.PI * 2,
+          alpha: 0.08 + Math.random() * 0.14
+        }));
+      }
+
+      function drawHeart(x, y, size, alpha) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.beginPath();
+        const topCurveHeight = size * 0.3;
+        ctx.moveTo(0, topCurveHeight);
+        ctx.bezierCurveTo(0, 0, -size / 2, 0, -size / 2, topCurveHeight);
+        ctx.bezierCurveTo(-size / 2, (size + topCurveHeight) / 2, 0, (size + topCurveHeight) / 1.25, 0, size);
+        ctx.bezierCurveTo(0, (size + topCurveHeight) / 1.25, size / 2, (size + topCurveHeight) / 2, size / 2, topCurveHeight);
+        ctx.bezierCurveTo(size / 2, 0, 0, 0, 0, topCurveHeight);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(251, 113, 133, ${alpha})`;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function animateHearts() {
+        ctx.clearRect(0, 0, width, height);
+        for (const h of hearts) {
+          h.y -= h.speedY;
+          h.x += Math.sin(h.phase) * 0.25 + h.drift;
+          h.phase += 0.015;
+          if (h.y < -h.size * 2) {
+            h.y = height + h.size;
+            h.x = Math.random() * width;
+          }
+          drawHeart(h.x, h.y, h.size, h.alpha);
+        }
+        requestAnimationFrame(animateHearts);
+      }
+
+      resizeCanvas();
+      createHearts();
+      animateHearts();
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        createHearts();
+      });
+    })();
+  </script>
+</body>
+</html>
